@@ -58,6 +58,9 @@
                     <input type="range" min="2" max="200" step="2">
                     <span class="rangeNumber"></span>Taille du mode infini
                 </div>
+                <div id="settingsStart">
+                    <a href="#">Start</a>
+                </div>
             </div>
             <div class="container2"></div>
         </div>
@@ -67,6 +70,7 @@
     <script>
         let grid = []
         let gridM = []
+        let timeoutMult = 0
         let params = {
             width: 9,
             height: 9,
@@ -118,6 +122,16 @@
         $("body").on("click", "#settingsReload a", function (e) {
             reload();
         })
+        $("body").on("click", "#settingsStart a", function (e) {
+            timeoutMult = 1
+            for (let i = 0; i < params.width; i++) {
+                for (let j = 0; j < params.height; j++) {
+                    if (gridM[i][j].isAlive == false)
+                        canSwitch(gridM[i][j], i, j);
+                }
+            }
+
+        })
         $("body").on("click", "#settingsConnex a", function (e) {
             getConnex();
         })
@@ -125,6 +139,125 @@
 
 
 
+        function canSwitch(cell, x, y) {
+
+            var initialStep = {
+                x1: {
+                    isAlive: gridM[getCellRounded(x, "height", false, true) - 1][getCellRounded(y, "width", false, true) - 1].isAlive == true ? true : false,
+                    x: getCellRounded(x, "height", false, true) - 1,
+                    y: getCellRounded(y, "width", false, true) - 1,
+                    type: "x"
+                },
+                t1: {
+                    isAlive: gridM[getCellRounded(x, "height", false, true) - 1][getCellRounded(y, "width", false, false)].isAlive == true ? true : false,
+                    x: getCellRounded(x, "height", false, true) - 1,
+                    y: getCellRounded(y, "width", false, false),
+                    type: "t"
+                },
+                x2: {
+                    isAlive: gridM[getCellRounded(x, "height", false, true) - 1][getCellRounded(y, "width", true, false) + 1].isAlive == true ? true : false,
+                    x: getCellRounded(x, "height", false, true) - 1,
+                    y: getCellRounded(y, "width", true, false) + 1,
+                    type: "x"
+                },
+                t2: {
+                    isAlive: gridM[getCellRounded(x, "height", false, false)][getCellRounded(y, "width", true, false) + 1].isAlive == true ? true : false,
+                    x: getCellRounded(x, "height", false, false),
+                    y: getCellRounded(y, "width", true, false) + 1,
+                    type: "t"
+                },
+                x3: {
+                    isAlive: gridM[getCellRounded(x, "height", true, false) + 1][getCellRounded(y, "width", true, false) + 1].isAlive == true ? true : false,
+                    x: getCellRounded(x, "height", true, false) + 1,
+                    y: getCellRounded(y, "width", true, false) + 1,
+                    type: "x"
+                },
+                t3: {
+                    isAlive: gridM[getCellRounded(x, "height", true, false) + 1][getCellRounded(y, "width", false, false)].isAlive == true ? true : false,
+                    x: getCellRounded(x, "height", true, false) + 1,
+                    y: getCellRounded(y, "width", false, false),
+                    type: "t"
+                },
+                x4: {
+                    isAlive: gridM[getCellRounded(x, "height", true, true) + 1][getCellRounded(y, "width", false, true) - 1].isAlive == true ? true : false,
+                    x: getCellRounded(x, "height", true, true) + 1,
+                    y: getCellRounded(y, "width", false, true) - 1,
+                    type: "x"
+                },
+                t4: {
+                    isAlive: gridM[getCellRounded(x, "height", false, false)][getCellRounded(y, "width", false, true) - 1].isAlive == true ? true : false,
+                    x: getCellRounded(x, "height", false, false),
+                    y: getCellRounded(y, "width", false, true) - 1,
+                    type: "t"
+                }
+            }
+            let step = 0
+            let stepsNames = ["x1", "t1", "x2", "t2", "x3", "t3", "x4", "t4", "x1"]
+            let step2Array = []
+            lastIsAlive = null
+            for (let i = 0; i < 9; i++) {
+                stepDaemon(i)
+            }
+            // if (
+            //     initialStep.t4.isAlive == initialStep.x1.isAlive
+            // ) {
+            //     console.log(step2Array)
+            //     step2Array[0].concat(step2Array[step2Array.length == 0 ? 0 : step2Array.length - 1])
+            //     step2Array.pop()
+            //     console.log("yes")
+            // }
+            let t = 0
+            for (let arr of step2Array) {
+                let isT = false
+                for (let celll of arr) {
+                    if (celll.type == "t")
+                        isT = true
+                }
+                if (isT == true)
+                    t += 1
+            }
+
+            if (t < 1) {
+
+            } else if (t > 1) {
+
+            } else {
+                params.canReload = true
+                gridM[x][y].isAlive = true
+                reloadChange(y, x, true)
+            }
+
+            function stepDaemon(i) {
+                if ((initialStep[stepsNames[i]].isAlive != lastIsAlive || lastIsAlive == null)) {
+                    if (lastIsAlive != null)
+                        step += 1
+                    if (initialStep[stepsNames[i]].isAlive == true) {
+                        step2Array.push([])
+                    }
+                    lastIsAlive = initialStep[stepsNames[i]].isAlive
+                }
+
+                if (initialStep[stepsNames[i]].isAlive == true) {
+                    if (
+                        i == 7 &&
+                        initialStep.t4.isAlive == initialStep.x1.isAlive
+                    ) {
+                        step2Array[0].push(initialStep[stepsNames[i]])
+                    } else {
+                        step2Array[step2Array.length - 1].push(initialStep[stepsNames[i]])
+                    }
+
+                }
+
+            }
+
+            // console.log(step)
+            // console.log(step2Array)
+            console.log(initialStep)
+            // console.log(step2Array[0][0])
+            // console.log(step2Array[step2Array.length == 0 ? 0 : step2Array.length - 1][step2Array[0].length == 0 ? 0 : step2Array[0].length - 1])
+
+        }
 
         function start() {
             let cell = "<div class='cell'></div>"
@@ -368,7 +501,12 @@
         $("body").on("click", ".container .cell", function () {
             let posX = $(this).data("positionx")
             let posY = $(this).data("positiony")
-            gridM[posY][posX].isAlive = !gridM[posY][posX].isAlive
+            reloadChange(posX, posY)
+        });
+
+        function reloadChange(posX, posY, changeGrid = null) {
+            if (changeGrid == null)
+                gridM[posY][posX].isAlive = !gridM[posY][posX].isAlive
             // if ($(this).hasClass("true")) {
             //     $(this).removeClass("true")
             //     $(this).addClass("false")
@@ -401,8 +539,9 @@
                 getConnex()
             params.canReload = canReload
             console.log(gridM)
-        });
+        }
     </script>
+
 </body>
 
 </html>
